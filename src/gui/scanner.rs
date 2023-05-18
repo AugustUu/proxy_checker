@@ -10,7 +10,7 @@ use futures::StreamExt;
 use futures::stream::FuturesUnordered;
 use itertools::Itertools;
 
-
+// https://cookie.engineer/weblog/articles/implementers-guide-to-socks.html
 
 async fn check_proxy(proxy_addr: &SocketAddr) -> Option<(SocketAddr,Duration)> {
 
@@ -47,7 +47,7 @@ pub struct ProxyResult {
     pub delay:f32,
 }
 
-pub fn scan(list:&String, tx: Sender<ProxyResult>){
+pub fn scan(list:&String, tx: Sender<Option<ProxyResult>>){
     let proxies: Vec<SocketAddr> = list.lines().into_iter().unique().map(|proxy| SocketAddr::from_str(proxy).expect("Coundent parse ip")).collect();
     tokio::spawn(async move {
 
@@ -75,11 +75,10 @@ pub fn scan(list:&String, tx: Sender<ProxyResult>){
 
             if let Some((proxy_addr,speed)) = result{
                 //out.push(ProxyResult { ip: proxy_addr, delay: speed.as_secs_f32() })
-                tx.send(ProxyResult { ip: proxy_addr, delay: speed.as_secs_f32() }).expect("error cloudent send");
+                tx.send(Some(ProxyResult { ip: proxy_addr, delay: speed.as_secs_f32() })).expect("error couldent send");
             }
         }
-
-
+        tx.send(None).expect("error couldent send");
         //let elapsed = start.elapsed().as_secs_f32();
         //println!("Done took {} Proxy/s Took {} Seconds",len as f32 / elapsed,elapsed);
 
