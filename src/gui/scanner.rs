@@ -68,8 +68,8 @@ pub fn scan(list: &String, tx: Sender<Option<ProxyResult>>, timeout:u64, batch_s
         
         for _ in 0..batch_size {
             if let Some(proxy) = proxy_iterator.next() {
-                ftrs.push(check_proxy(proxy,5));
-            } else {
+                ftrs.push(check_proxy(proxy,timeout));
+            } else {    
                 break;
             }
         }

@@ -18,15 +18,23 @@ enum Page {
     Settings,
 }
 
+#[derive(Debug, PartialEq)]
+enum SortMethod{
+    Delay,
+    Ip,
+    Port,
+}
+
 pub struct App {
     pub input_proxys: String,
     pub output_proxys: Vec<ProxyResult>,
     tx: Sender<Option<ProxyResult>>,
     rx: Receiver<Option<ProxyResult>>,
     scanning: bool,
-    page: Page,
+    batch_size: u64,
     timeout: u64,
-    batch_size: u64
+    sort_mehtod: SortMethod,
+    page: Page,
 }
 
 impl Default for App {
@@ -41,6 +49,7 @@ impl Default for App {
             page: Page::Home,
             timeout: 5,
             batch_size: 1000,
+            sort_mehtod: SortMethod::Delay,
         }
     }
 }
@@ -144,6 +153,15 @@ impl eframe::App for App {
                                             ui.heading(egui::RichText::new(format!("Done: {}",self.output_proxys.len())).heading().color(egui::Color32::from_rgb(68, 137, 178)));
                                         }
                                     }
+                                    if ui.button(egui::RichText::new("Copy All").size(14.0)).clicked(){
+                                        let mut ctx: ClipboardContext = ClipboardProvider::new().unwrap();
+                                        let mut list = String::new();
+                                        for proxy in self.output_proxys.iter(){
+                                            list.push_str(&(proxy.ip.to_string() + "\n"))
+                                        }
+
+                                        ctx.set_contents(list).unwrap();
+                                    }
                                 });
 
                                 let table = TableBuilder::new(ui)
@@ -193,6 +211,15 @@ impl eframe::App for App {
                     ui.vertical(|ui| {
                         ui.add(egui::Slider::new(&mut self.timeout, 1..=20).text(RichText::new("Timeout").size(16.0)));
                         ui.add(egui::Slider::new(&mut self.batch_size, 1..=20000).text(RichText::new("Batch size").size(16.0)));
+
+                        egui::ComboBox::from_label(RichText::new("Sort Order").size(16.0))
+                        .selected_text(RichText::new(format!("Order: {:?}", self.sort_mehtod)).size(16.0))
+                        .show_ui(ui, |ui| {
+                            ui.selectable_value(&mut self.sort_mehtod, SortMethod::Delay, RichText::new("Latency").size(16.0));
+                            ui.selectable_value(&mut self.sort_mehtod, SortMethod::Ip, RichText::new("Ip").size(16.0));
+                            ui.selectable_value(&mut self.sort_mehtod, SortMethod::Port, RichText::new("Port").size(16.0));
+                        });
+                        
                     });
                 },
             }
