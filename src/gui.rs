@@ -6,8 +6,7 @@ use egui_extras::Column;
 use egui_extras::TableBuilder;
 use std::sync::mpsc::{Receiver, Sender};
 use std::{fs::File, io::Read, io::Write};
-use tinyfiledialogs::{self};
-
+use tinyfiledialogs::{self};    
 use clipboard::ClipboardContext;
 use clipboard::ClipboardProvider;
 
@@ -35,6 +34,7 @@ pub struct App {
     timeout: u64,
     sort_mehtod: SortMethod,
     page: Page,
+    url: String,
 }
 
 impl Default for App {
@@ -50,6 +50,7 @@ impl Default for App {
             timeout: 5,
             batch_size: 1000,
             sort_mehtod: SortMethod::Delay,
+            url: String::from("https://raw.githubusercontent.com/TheSpeedX/SOCKS-List/master/socks5.txt"),
         }
     }
 }
@@ -124,11 +125,14 @@ impl eframe::App for App {
                             ui.close_menu();
                         }
                     }
+                    if ui.button("Get Proxys").clicked() {
+                       self.input_proxys = ureq::get(&self.url).call().unwrap().into_string().unwrap();
+                    }
                 });
             });
         });
 
-        egui::CentralPanel::default().show(ctx, |ui| {
+        egui::CentralPanel::default().show(ctx, |ui| {  
             match self.page {
                 Page::Home => {
                     ui.horizontal_centered(|ui| {
@@ -175,13 +179,13 @@ impl eframe::App for App {
 
                                 table.header(20.0, |mut header| {
                                         header.col(|ui| {
-                                            ui.strong("Latency");
+                                            ui.strong(egui::RichText::new("Latency").size(16.0));
                                         });
                                         header.col(|ui| {
-                                            ui.strong("IP");
+                                            ui.strong(egui::RichText::new("IP").size(16.0));
                                         });
                                         header.col(|ui| {
-                                            ui.strong("Port");
+                                            ui.strong(egui::RichText::new("Port").size(16.0));
                                         });
                                     })
                                     .body(|mut body| {
@@ -218,6 +222,10 @@ impl eframe::App for App {
                             ui.selectable_value(&mut self.sort_mehtod, SortMethod::Delay, RichText::new("Latency").size(16.0));
                             ui.selectable_value(&mut self.sort_mehtod, SortMethod::Ip, RichText::new("Ip").size(16.0));
                             ui.selectable_value(&mut self.sort_mehtod, SortMethod::Port, RichText::new("Port").size(16.0));
+                        });
+                        ui.horizontal(|ui| {
+                            ui.add(egui::TextEdit::singleline(&mut self.url).hint_text("Url"));
+                            ui.label(RichText::new("Proxy Url").size(16.0));
                         });
                         
                     });

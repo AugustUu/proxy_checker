@@ -29,10 +29,7 @@ async fn check_proxy(proxy_addr: &SocketAddr,timeout_time: u64) -> Option<(Socke
     }
 
     let mut response = [0; 2];
-    if timeout(Duration::from_secs(timeout_time), stream.read_exact(&mut response))
-        .await
-        .is_err()
-    {
+    if timeout(Duration::from_secs(timeout_time), stream.read_exact(&mut response)).await.is_err(){
         return None;
     }
 
@@ -90,6 +87,7 @@ pub fn scan(list: &String, tx: Sender<Option<ProxyResult>>, timeout:u64, batch_s
             }
         }
         tx.send(None).expect("error couldent send");
+        
         //let elapsed = start.elapsed().as_secs_f32();
         //println!("Done took {} Proxy/s Took {} Seconds",len as f32 / elapsed,elapsed);
     });
